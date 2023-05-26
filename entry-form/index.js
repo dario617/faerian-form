@@ -113,7 +113,7 @@ async function saveForm(validatedFields, client) {
     });
 
     const result = await client
-      .insert({ ...validatedFields, accesscode: otp, premium: false })
+      .insert({ ...validatedFields, accesscode: otp })
       .into("nftform");
     console.log("insert form to db", result);
     return otp;
@@ -128,6 +128,7 @@ function validateFieldsFromRequest(parsedBody) {
   try {
     validator.isEmail(parsedBody.email);
   } catch (e) {
+    console.error(e, e.stack);
     return null;
   }
 
@@ -138,7 +139,8 @@ function validateFieldsFromRequest(parsedBody) {
     }),
     name: validator.escape(parsedBody.name),
     prompt: validator.escape(parsedBody.prompt),
-    twitter: validator.escape(parsedBody.twitter),
+    twitter: parsedBody.twitter !== "" ? validator.escape(parsedBody.twitter) : "",
+    premium: parsedBody.premium,
   };
 }
 
@@ -197,6 +199,8 @@ functions.http("handler", async (req, res) => {
 
     if (!validatedFields) {
       console.log("Fields are wrong", { validatedFields, body: parsedBody });
+      res.status(400).json({ error: "wrong fields" });
+      return;
     }
 
     const emailExists = await checkEmailExistsOnDB(
