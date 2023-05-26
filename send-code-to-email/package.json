@@ -1,0 +1,13 @@
+{
+  "name": "entry-form",
+  "version": "0.0.1",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "validator": "13.9.0",
+    "otp-generator": "^4.0.1",
+    "axios": "1.4.0",
+    "pg": "8.11.0",
+    "knex": "2.4.2",
+    "uuid": "9.0.0"
+  }
+}
