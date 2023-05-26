@@ -142,8 +142,6 @@ function validateFieldsFromRequest(parsedBody) {
   };
 }
 
-templateId: 63;
-
 async function sendEmailWithCode(variables) {
   if (!process.env.BREVO_API_KEY) {
     console.error("Failed to send email because api key is not defined");
@@ -184,7 +182,7 @@ async function sendEmailWithCode(variables) {
 functions.http("handler", async (req, res) => {
   // CORS |
   res.set("Access-Control-Allow-Origin", "*");
-  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   if (req.method === "OPTIONS") {
     // stop preflight requests here
     res.status(204).send("");
@@ -195,8 +193,14 @@ functions.http("handler", async (req, res) => {
 
     const parsedBody = JSON.parse(req.body);
 
+    const validatedFields = validateFieldsFromRequest(parsedBody);
+
+    if (!validatedFields) {
+      console.log("Fields are wrong", { validatedFields, body: parsedBody });
+    }
+
     const emailExists = await checkEmailExistsOnDB(
-      parsedBody.email,
+      validatedFields.email,
       knexClient
     );
 
@@ -204,12 +208,6 @@ functions.http("handler", async (req, res) => {
       console.log("Email exists, exiting");
       res.status(400).json({ error: "email exists" });
       return;
-    }
-
-    const validatedFields = validateFieldsFromRequest(parsedBody);
-
-    if (!validatedFields) {
-      console.log("Fields are wrong", { validatedFields, body: parsedBody });
     }
 
     const insertionResult = await saveForm(validatedFields, knexClient);
