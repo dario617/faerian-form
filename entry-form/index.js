@@ -181,6 +181,20 @@ async function sendEmailWithCode(variables) {
     });
 }
 
+async function checkRecaptcha(body) {
+  const parsedBody = JSON.parse(body);
+  const recaptcha = parsedBody["g-recaptcha-response"];
+  console.log("Recaptcha", recaptcha);
+  await axios.post("https://www.google.com/recaptcha/api/siteverify", {
+    secret: process.env.RECAPTCHA_SECRET,
+    response: recaptcha,
+  })
+  if (!recaptcha) {
+    throw new Error("No recaptcha");
+  }
+  return recaptcha;
+}
+
 functions.http("handler", async (req, res) => {
   // CORS |
   res.set("Access-Control-Allow-Origin", "*");
@@ -196,6 +210,8 @@ functions.http("handler", async (req, res) => {
     const parsedBody = JSON.parse(req.body);
 
     const validatedFields = validateFieldsFromRequest(parsedBody);
+
+    await checkRecaptcha(req.body);
 
     if (!validatedFields) {
       console.log("Fields are wrong", { validatedFields, body: parsedBody });
